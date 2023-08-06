@@ -4,7 +4,7 @@ namespace Library.Api.Data;
 
 public interface IMongoDbClientFactory
 {
-    IMongoClient CreateClientAsync();
+    IMongoClient CreateClient();
 
     IMongoDatabase GetDatabase(string name);
 

@@ -15,21 +15,19 @@ public class MongoDbClientFactory : IMongoDbClientFactory
     }
 
 
-    public IMongoClient CreateClientAsync()
+    public IMongoClient CreateClient()
     {
-        if (_client is null)
-        {
-            _client = new MongoClient(_connectionString);
-            var camelCaseConvention = new ConventionPack { new CamelCaseElementNameConvention() };
-            // convention must be registered before initialising collection
-            ConventionRegistry.Register("CamelCase", camelCaseConvention, type => true); 
-        }
+        if (_client is not null) return _client;
+        _client = new MongoClient(_connectionString);
+        var camelCaseConvention = new ConventionPack { new CamelCaseElementNameConvention() };
+        // convention must be registered before initialising collection
+        ConventionRegistry.Register("CamelCase", camelCaseConvention, type => true);
         return _client;
     }
 
     public IMongoDatabase GetDatabase(string name)
     {
-        var client = CreateClientAsync();
+        var client = CreateClient();
         return client.GetDatabase(name);
     }
 }

@@ -7,30 +7,17 @@ namespace Library.Api.Services;
 public class BookService : IBookService
 {
     private readonly IMongoCollection<Book> _booksCollection;
-    
+
     public BookService(IMongoDbClientFactory connectionFactory)
     {
         _booksCollection = connectionFactory.GetDatabase("test").GetCollection<Book>("books");
-        Task.Run(() => this.EnsureIndexes()).Wait(); // Figure out a better way of doing this 
+        Task.Run(() => EnsureIndexes()).Wait(); // Figure out a better way of doing this 
     }
 
-    public async Task<IEnumerable<string?>> EnsureIndexes()
-    {
-        var options = new CreateIndexOptions { Unique = true };
-        var bookBuilder = Builders<Book>.IndexKeys;
-        var indexModel = new CreateIndexModel<Book>(bookBuilder.Ascending(b => b.Isbn), options);
-        var titleModel = new CreateIndexModel<Book>(bookBuilder.Text(b => b.Title));
-        var result = await _booksCollection.Indexes.CreateManyAsync(new[] { indexModel, titleModel });
-        return result;
-    }
-    
     public async Task<bool> CreateAsync(Book book)
     {
         var existingBook = await GetByIsbnAsync(book.Isbn);
-        if (existingBook is not null)
-        {
-            return false;
-        }
+        if (existingBook is not null) return false;
 
         await _booksCollection.InsertOneAsync(book);
         return true;
@@ -38,8 +25,8 @@ public class BookService : IBookService
 
     public async Task<Book?> GetByIsbnAsync(string isbn)
     {
-        return await _booksCollection.Find(b => b.Isbn == isbn).SingleAsync();
-        
+        var result = await _booksCollection.Find(b => b.Isbn == isbn).ToListAsync();
+        return result?.FirstOrDefault();
     }
 
     public async Task<IEnumerable<Book>> GetAllAsync()
@@ -62,5 +49,15 @@ public class BookService : IBookService
     {
         var result = await _booksCollection.DeleteOneAsync(b => b.Isbn == isbn);
         return result.DeletedCount > 0;
+    }
+
+    public async Task<IEnumerable<string?>> EnsureIndexes()
+    {
+        var options = new CreateIndexOptions { Unique = true };
+        var bookBuilder = Builders<Book>.IndexKeys;
+        var indexModel = new CreateIndexModel<Book>(bookBuilder.Ascending(b => b.Isbn), options);
+        var titleModel = new CreateIndexModel<Book>(bookBuilder.Text(b => b.Title));
+        var result = await _booksCollection.Indexes.CreateManyAsync(new[] { indexModel, titleModel });
+        return result;
     }
 }
