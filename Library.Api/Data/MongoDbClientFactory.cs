@@ -1,4 +1,3 @@
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
@@ -13,7 +12,6 @@ public class MongoDbClientFactory : IMongoDbClientFactory
     {
         _connectionString = connectionString;
     }
-
 
     public IMongoClient CreateClient()
     {
